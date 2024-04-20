@@ -13,6 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull : false,
         unique: true,
+        defaultValue: 're4353@gamil.com',
         validate : {
           isEmail : true,
          }
@@ -20,6 +21,7 @@ module.exports = {
       password: {
         type: Sequelize.STRING,
         allowNull : false,
+        defaultValue: '5px4e5cp1',
         validate: {
           len: [5, 15],
         },
