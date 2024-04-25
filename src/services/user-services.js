@@ -1,17 +1,20 @@
 const statusCode = require('http-status-codes');
 
-const {Auth} = require('../utils/common');
+const {Auth,Enum} = require('../utils/common');
 
 const AppError = require('../utils/Error/app-error');
 
-const { UserRepository } = require('../repositories');
+const { UserRepository, RoleRepository } = require('../repositories');
 
 const userRepository = new UserRepository();
+const roleRepository = new RoleRepository();
 
 //create sign Up
 async function createUser(data) {
   try {
     const user = await userRepository.create(data);
+    const role = await roleRepository.getRoleByName(Enum.USER_ROLES_ENUM.Customer);
+    user.addRole(role);
     return user;
   } catch (error) {
     if (error.name == "SequelizeValidationError") {
@@ -73,14 +76,55 @@ async function isAuthenticated(Token){
   if(error.name === 'JsonWebTokenError'){
     throw new AppError('Invalid Jwt Token', statusCode.BAD_REQUEST);
   }
+  if(error.name === 'TokenExpiredError'){
+    throw new AppError('Jwt Token Expired', statusCode.BAD_REQUEST);
+  }
   console.log(error);
   throw new AppError('Something went wrong', statusCode.INTERNAL_SERVER_ERROR);
  }
 }
 
+//add role to user 
+async function addRoleToUser(data){
+ try {
+  const user = await userRepository.get(data.id);
+  if(!user){
+    throw new AppError('No User Found for the given id', statusCode.NOT_FOUND);
+  }
+    const role = await roleRepository.getRoleByName(data.role);
+    if(!role) {
+      throw new AppError('No role Found for the given id', statusCode.NOT_FOUND);
+    }
+    user.addRole(role);
+    return user;
+ } catch (error) {
+  if(error instanceof AppError) throw error;
+  console.log(error);
+  throw new AppError('Something went wrong', statusCode.INTERNAL_SERVER_ERROR);
+ }
+}
+
+//Is Admin
+async function isAdmin(id){
+  try {
+    const user = await userRepository.get(id);
+    if(!user){
+      throw new AppError('No User Found for the given id', statusCode.NOT_FOUND);
+    }
+    const adminRole = await roleRepository.get(Enum.USER_ROLES_ENUM.Admin);
+    if(!adminRole) {
+      throw new AppError('No role Found for the given id', statusCode.NOT_FOUND);
+    }
+      return user.hasRole(adminRole);
+  } catch (error) {
+    
+  }
+}
 module.exports = {
   createUser,
   signIn,
-  isAuthenticated
+  isAuthenticated,
+  addRoleToUser,
+  isAdmin
 }
 

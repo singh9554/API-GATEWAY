@@ -8,4 +8,5 @@ router.post('/signUp',AuthValidationMiddleware.authValidation,UserController.sig
 
 router.post('/signIn',AuthValidationMiddleware.authValidation, UserController.signIn);
 
+router.post('/role',AuthValidationMiddleware.checkAuth, AuthValidationMiddleware.isAdmin ,UserController.addRoleToUser);
 module.exports = router;
